@@ -1,0 +1,2023 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Warehouse Management System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard and analytics
+  - name: materials
+    description: Material inventory management
+  - name: tools
+    description: Tool/equipment inventory management
+  - name: material-requests
+    description: Material request management
+  - name: tool-requests
+    description: Tool borrowing requests
+  - name: stock-movements
+    description: Stock movement (in/out/transfer)
+  - name: suppliers
+    description: Supplier master data
+  - name: purchase-orders
+    description: Purchase order management
+  - name: reports
+    description: Reports and analytics
+  - name: users
+    description: User management
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── DASHBOARD ────────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary statistics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/material-usage:
+    get:
+      operationId: getMaterialUsageChart
+      tags: [dashboard]
+      summary: Get material usage chart data (last 30 days)
+      responses:
+        "200":
+          description: Material usage chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChartDataPoint"
+
+  /dashboard/tool-usage:
+    get:
+      operationId: getToolUsageChart
+      tags: [dashboard]
+      summary: Get tool usage chart data (last 30 days)
+      responses:
+        "200":
+          description: Tool usage chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChartDataPoint"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Recent activity list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/pending-requests:
+    get:
+      operationId: getPendingRequestsSummary
+      tags: [dashboard]
+      summary: Get summary of pending requests for approval
+      responses:
+        "200":
+          description: Pending requests summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingRequestsSummary"
+
+  # ── MATERIALS ────────────────────────────────────────────────────────────────
+  /materials:
+    get:
+      operationId: listMaterials
+      tags: [materials]
+      summary: List all materials
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: lowStock
+          in: query
+          schema:
+            type: boolean
+        - name: warehouseId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of materials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Material"
+    post:
+      operationId: createMaterial
+      tags: [materials]
+      summary: Create a new material
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaterialInput"
+      responses:
+        "201":
+          description: Created material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+
+  /materials/{id}:
+    get:
+      operationId: getMaterial
+      tags: [materials]
+      summary: Get a material by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateMaterial
+      tags: [materials]
+      summary: Update a material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaterialUpdate"
+      responses:
+        "200":
+          description: Updated material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+    delete:
+      operationId: deleteMaterial
+      tags: [materials]
+      summary: Delete a material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /materials/{id}/stock-adjust:
+    post:
+      operationId: adjustMaterialStock
+      tags: [materials]
+      summary: Adjust stock (in/out/adjustment)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjustInput"
+      responses:
+        "200":
+          description: Updated material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+
+  /materials/categories:
+    get:
+      operationId: listMaterialCategories
+      tags: [materials]
+      summary: List all material categories
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ── TOOLS ────────────────────────────────────────────────────────────────────
+  /tools:
+    get:
+      operationId: listTools
+      tags: [tools]
+      summary: List all tools
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+    post:
+      operationId: createTool
+      tags: [tools]
+      summary: Register a new tool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolInput"
+      responses:
+        "201":
+          description: Created tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /tools/{id}:
+    get:
+      operationId: getTool
+      tags: [tools]
+      summary: Get a tool by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+    patch:
+      operationId: updateTool
+      tags: [tools]
+      summary: Update a tool
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolUpdate"
+      responses:
+        "200":
+          description: Updated tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+    delete:
+      operationId: deleteTool
+      tags: [tools]
+      summary: Delete a tool
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tools/{id}/status:
+    patch:
+      operationId: updateToolStatus
+      tags: [tools]
+      summary: Update tool status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolStatusUpdate"
+      responses:
+        "200":
+          description: Updated tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /tools/stats:
+    get:
+      operationId: getToolStats
+      tags: [tools]
+      summary: Get tool status breakdown statistics
+      responses:
+        "200":
+          description: Tool status statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolStats"
+
+  # ── MATERIAL REQUESTS ────────────────────────────────────────────────────────
+  /material-requests:
+    get:
+      operationId: listMaterialRequests
+      tags: [material-requests]
+      summary: List material requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: requesterId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: priority
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of material requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaterialRequest"
+    post:
+      operationId: createMaterialRequest
+      tags: [material-requests]
+      summary: Create a new material request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaterialRequestInput"
+      responses:
+        "201":
+          description: Created request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequest"
+
+  /material-requests/{id}:
+    get:
+      operationId: getMaterialRequest
+      tags: [material-requests]
+      summary: Get a material request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Material request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequest"
+    delete:
+      operationId: deleteMaterialRequest
+      tags: [material-requests]
+      summary: Delete a material request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /material-requests/{id}/approve:
+    post:
+      operationId: approveMaterialRequest
+      tags: [material-requests]
+      summary: Approve a material request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalInput"
+      responses:
+        "200":
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequest"
+
+  /material-requests/{id}/reject:
+    post:
+      operationId: rejectMaterialRequest
+      tags: [material-requests]
+      summary: Reject a material request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalInput"
+      responses:
+        "200":
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequest"
+
+  # ── TOOL REQUESTS ────────────────────────────────────────────────────────────
+  /tool-requests:
+    get:
+      operationId: listToolRequests
+      tags: [tool-requests]
+      summary: List tool borrowing requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: requesterId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of tool requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ToolRequest"
+    post:
+      operationId: createToolRequest
+      tags: [tool-requests]
+      summary: Create a new tool borrowing request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolRequestInput"
+      responses:
+        "201":
+          description: Created tool request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolRequest"
+
+  /tool-requests/{id}:
+    get:
+      operationId: getToolRequest
+      tags: [tool-requests]
+      summary: Get a tool request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tool request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolRequest"
+    delete:
+      operationId: deleteToolRequest
+      tags: [tool-requests]
+      summary: Delete a tool request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tool-requests/{id}/approve:
+    post:
+      operationId: approveToolRequest
+      tags: [tool-requests]
+      summary: Approve a tool request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalInput"
+      responses:
+        "200":
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolRequest"
+
+  /tool-requests/{id}/return:
+    post:
+      operationId: returnToolRequest
+      tags: [tool-requests]
+      summary: Mark tool as returned
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolReturnInput"
+      responses:
+        "200":
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolRequest"
+
+  # ── STOCK MOVEMENTS ──────────────────────────────────────────────────────────
+  /stock-movements:
+    get:
+      operationId: listStockMovements
+      tags: [stock-movements]
+      summary: List stock movements
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: materialId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of stock movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockMovement"
+
+  /stock-movements/{id}:
+    delete:
+      operationId: deleteStockMovement
+      tags: [stock-movements]
+      summary: Delete a stock movement record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── SUPPLIERS ─────────────────────────────────────────────────────────────────
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [suppliers]
+      summary: List suppliers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Supplier"
+    post:
+      operationId: createSupplier
+      tags: [suppliers]
+      summary: Create a supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierInput"
+      responses:
+        "201":
+          description: Created supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+
+  /suppliers/{id}:
+    get:
+      operationId: getSupplier
+      tags: [suppliers]
+      summary: Get supplier by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    patch:
+      operationId: updateSupplier
+      tags: [suppliers]
+      summary: Update supplier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierInput"
+      responses:
+        "200":
+          description: Updated supplier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    delete:
+      operationId: deleteSupplier
+      tags: [suppliers]
+      summary: Delete supplier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── PURCHASE ORDERS ────────────────────────────────────────────────────────────
+  /purchase-orders:
+    get:
+      operationId: listPurchaseOrders
+      tags: [purchase-orders]
+      summary: List purchase orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of purchase orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PurchaseOrder"
+    post:
+      operationId: createPurchaseOrder
+      tags: [purchase-orders]
+      summary: Create a purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderInput"
+      responses:
+        "201":
+          description: Created PO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+
+  /purchase-orders/{id}:
+    get:
+      operationId: getPurchaseOrder
+      tags: [purchase-orders]
+      summary: Get PO by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Purchase order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+    delete:
+      operationId: deletePurchaseOrder
+      tags: [purchase-orders]
+      summary: Delete PO
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /purchase-orders/{id}/approve:
+    post:
+      operationId: approvePurchaseOrder
+      tags: [purchase-orders]
+      summary: Approve a PO
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalInput"
+      responses:
+        "200":
+          description: Approved PO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+
+  /purchase-orders/{id}/receive:
+    post:
+      operationId: receivePurchaseOrder
+      tags: [purchase-orders]
+      summary: Receive goods against a PO (triggers stock-in)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/POReceiveInput"
+      responses:
+        "200":
+          description: PO after receiving
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+
+  # ── MATERIAL REQUEST RELEASE ──────────────────────────────────────────────────
+  /material-requests/{id}/release:
+    post:
+      operationId: releaseMaterialRequest
+      tags: [material-requests]
+      summary: Release/fulfil an approved material request (triggers stock-out)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseInput"
+      responses:
+        "200":
+          description: Released request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequest"
+
+  # ── REPORTS ───────────────────────────────────────────────────────────────────
+  /reports/inventory-value:
+    get:
+      operationId: getInventoryValue
+      tags: [reports]
+      summary: Get total inventory value and per-material breakdown
+      responses:
+        "200":
+          description: Inventory value report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryValueReport"
+
+  /reports/top-materials:
+    get:
+      operationId: getTopMaterials
+      tags: [reports]
+      summary: Get top consumed materials in the last 30 days
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Top materials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopMaterialItem"
+
+  /reports/stock-card:
+    get:
+      operationId: getStockCard
+      tags: [reports]
+      summary: Get stock card (full transaction history) for a material
+      parameters:
+        - name: materialId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stock card data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockCardReport"
+
+  # ── USERS ────────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    # ── Dashboard ──────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required:
+        - totalMaterials
+        - totalTools
+        - lowStockMaterials
+        - toolsBorrowed
+        - pendingRequests
+        - stockInToday
+        - stockOutToday
+        - toolsAvailable
+        - toolsMaintenance
+      properties:
+        totalMaterials:
+          type: integer
+        totalTools:
+          type: integer
+        lowStockMaterials:
+          type: integer
+        toolsBorrowed:
+          type: integer
+        pendingRequests:
+          type: integer
+        stockInToday:
+          type: integer
+        stockOutToday:
+          type: integer
+        toolsAvailable:
+          type: integer
+        toolsMaintenance:
+          type: integer
+
+    ChartDataPoint:
+      type: object
+      required: [date, value, label]
+      properties:
+        date:
+          type: string
+        value:
+          type: number
+        label:
+          type: string
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, user, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        user:
+          type: string
+        createdAt:
+          type: string
+
+    PendingRequestsSummary:
+      type: object
+      required: [materialRequests, toolRequests]
+      properties:
+        materialRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/MaterialRequest"
+        toolRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolRequest"
+
+    # ── Material ───────────────────────────────────────────────────────────────
+    Material:
+      type: object
+      required:
+        - id
+        - code
+        - name
+        - category
+        - unit
+        - currentStock
+        - minimumStock
+        - maximumStock
+        - createdAt
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        subCategory:
+          type: ["string", "null"]
+        brand:
+          type: ["string", "null"]
+        specification:
+          type: ["string", "null"]
+        unit:
+          type: string
+        minimumStock:
+          type: integer
+        maximumStock:
+          type: integer
+        currentStock:
+          type: integer
+        reservedStock:
+          type: integer
+        rackLocation:
+          type: ["string", "null"]
+        warehouseZone:
+          type: ["string", "null"]
+        supplier:
+          type: ["string", "null"]
+        unitPrice:
+          type: ["number", "null"]
+        isLowStock:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    MaterialInput:
+      type: object
+      required: [name, category, unit, minimumStock, maximumStock]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        subCategory:
+          type: string
+        brand:
+          type: string
+        specification:
+          type: string
+        unit:
+          type: string
+        minimumStock:
+          type: integer
+        maximumStock:
+          type: integer
+        currentStock:
+          type: integer
+        rackLocation:
+          type: string
+        warehouseZone:
+          type: string
+        supplier:
+          type: string
+        unitPrice:
+          type: number
+
+    MaterialUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        subCategory:
+          type: string
+        brand:
+          type: string
+        specification:
+          type: string
+        unit:
+          type: string
+        minimumStock:
+          type: integer
+        maximumStock:
+          type: integer
+        rackLocation:
+          type: string
+        warehouseZone:
+          type: string
+        supplier:
+          type: string
+        unitPrice:
+          type: number
+
+    StockAdjustInput:
+      type: object
+      required: [type, quantity, reason]
+      properties:
+        type:
+          type: string
+          enum: [stock_in, stock_out, adjustment]
+        quantity:
+          type: integer
+        reason:
+          type: string
+        reference:
+          type: string
+
+    # ── Tool ───────────────────────────────────────────────────────────────────
+    Tool:
+      type: object
+      required:
+        - id
+        - code
+        - name
+        - category
+        - status
+        - condition
+        - createdAt
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        serialNumber:
+          type: ["string", "null"]
+        brand:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        purchaseYear:
+          type: ["integer", "null"]
+        condition:
+          type: string
+          enum: [good, fair, poor, damaged]
+        status:
+          type: string
+          enum: [available, in_use, maintenance, calibration, damaged, lost]
+        location:
+          type: ["string", "null"]
+        pic:
+          type: ["string", "null"]
+        assetValue:
+          type: ["number", "null"]
+        nextMaintenanceDate:
+          type: ["string", "null"]
+        nextCalibrationDate:
+          type: ["string", "null"]
+        lastUsedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ToolInput:
+      type: object
+      required: [name, category, condition]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        serialNumber:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        purchaseYear:
+          type: integer
+        condition:
+          type: string
+          enum: [good, fair, poor, damaged]
+        location:
+          type: string
+        pic:
+          type: string
+        assetValue:
+          type: number
+        nextMaintenanceDate:
+          type: string
+        nextCalibrationDate:
+          type: string
+
+    ToolUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        serialNumber:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        condition:
+          type: string
+          enum: [good, fair, poor, damaged]
+        location:
+          type: string
+        pic:
+          type: string
+        assetValue:
+          type: number
+        nextMaintenanceDate:
+          type: string
+        nextCalibrationDate:
+          type: string
+
+    ToolStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [available, in_use, maintenance, calibration, damaged, lost]
+        notes:
+          type: string
+
+    ToolStats:
+      type: object
+      required: [available, inUse, maintenance, calibration, damaged, lost]
+      properties:
+        available:
+          type: integer
+        inUse:
+          type: integer
+        maintenance:
+          type: integer
+        calibration:
+          type: integer
+        damaged:
+          type: integer
+        lost:
+          type: integer
+
+    # ── Material Request ───────────────────────────────────────────────────────
+    MaterialRequest:
+      type: object
+      required:
+        - id
+        - requestNumber
+        - requesterName
+        - department
+        - status
+        - priority
+        - items
+        - createdAt
+      properties:
+        id:
+          type: integer
+        requestNumber:
+          type: string
+        requesterName:
+          type: string
+        requesterId:
+          type: ["integer", "null"]
+        department:
+          type: string
+        workLocation:
+          type: ["string", "null"]
+        jobType:
+          type: ["string", "null"]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [draft, pending, approved, rejected, released, completed]
+        neededDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        approvedBy:
+          type: ["string", "null"]
+        approvalNotes:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestItem"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    MaterialRequestInput:
+      type: object
+      required: [requesterName, department, priority, items]
+      properties:
+        requesterName:
+          type: string
+        requesterId:
+          type: integer
+        department:
+          type: string
+        workLocation:
+          type: string
+        jobType:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        neededDate:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestItemInput"
+
+    RequestItem:
+      type: object
+      required: [id, materialId, materialName, materialCode, quantity, unit]
+      properties:
+        id:
+          type: integer
+        materialId:
+          type: integer
+        materialName:
+          type: string
+        materialCode:
+          type: string
+        quantity:
+          type: integer
+        unit:
+          type: string
+        notes:
+          type: ["string", "null"]
+
+    RequestItemInput:
+      type: object
+      required: [materialId, quantity]
+      properties:
+        materialId:
+          type: integer
+        quantity:
+          type: integer
+        notes:
+          type: string
+
+    # ── Tool Request ───────────────────────────────────────────────────────────
+    ToolRequest:
+      type: object
+      required:
+        - id
+        - requestNumber
+        - requesterName
+        - department
+        - status
+        - toolId
+        - toolName
+        - scheduledStart
+        - scheduledEnd
+        - createdAt
+      properties:
+        id:
+          type: integer
+        requestNumber:
+          type: string
+        requesterName:
+          type: string
+        requesterId:
+          type: ["integer", "null"]
+        department:
+          type: string
+        toolId:
+          type: integer
+        toolName:
+          type: string
+        toolCode:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, in_use, returned, overdue]
+        scheduledStart:
+          type: string
+        scheduledEnd:
+          type: string
+        actualReturn:
+          type: ["string", "null"]
+        purpose:
+          type: ["string", "null"]
+        conditionOnReturn:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        approvedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ToolRequestInput:
+      type: object
+      required: [requesterName, department, toolId, scheduledStart, scheduledEnd]
+      properties:
+        requesterName:
+          type: string
+        requesterId:
+          type: integer
+        department:
+          type: string
+        toolId:
+          type: integer
+        scheduledStart:
+          type: string
+        scheduledEnd:
+          type: string
+        purpose:
+          type: string
+        notes:
+          type: string
+
+    ToolReturnInput:
+      type: object
+      required: [conditionOnReturn]
+      properties:
+        conditionOnReturn:
+          type: string
+          enum: [good, fair, poor, damaged]
+        notes:
+          type: string
+
+    # ── Approval ───────────────────────────────────────────────────────────────
+    ApprovalInput:
+      type: object
+      required: [approvedBy]
+      properties:
+        approvedBy:
+          type: string
+        notes:
+          type: string
+
+    # ── Stock Movement ─────────────────────────────────────────────────────────
+    StockMovement:
+      type: object
+      required:
+        - id
+        - materialId
+        - materialName
+        - type
+        - quantity
+        - reason
+        - performedBy
+        - createdAt
+      properties:
+        id:
+          type: integer
+        materialId:
+          type: integer
+        materialName:
+          type: string
+        materialCode:
+          type: string
+        type:
+          type: string
+          enum: [stock_in, stock_out, adjustment, transfer]
+        quantity:
+          type: integer
+        previousStock:
+          type: integer
+        newStock:
+          type: integer
+        reason:
+          type: string
+        reference:
+          type: ["string", "null"]
+        performedBy:
+          type: string
+        createdAt:
+          type: string
+
+    # ── Supplier ───────────────────────────────────────────────────────────────
+    Supplier:
+      type: object
+      required: [id, code, name, category, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        contactPerson:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        npwp:
+          type: ["string", "null"]
+        paymentTerms:
+          type: ["string", "null"]
+        leadTimeDays:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    SupplierInput:
+      type: object
+      required: [name, category]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        contactPerson:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        npwp:
+          type: string
+        paymentTerms:
+          type: string
+        leadTimeDays:
+          type: string
+        notes:
+          type: string
+        isActive:
+          type: boolean
+
+    # ── Purchase Order ──────────────────────────────────────────────────────────
+    POItem:
+      type: object
+      required: [id, poId, materialName, unit, quantityOrdered, quantityReceived]
+      properties:
+        id:
+          type: integer
+        poId:
+          type: integer
+        materialId:
+          type: ["integer", "null"]
+        materialName:
+          type: string
+        materialCode:
+          type: ["string", "null"]
+        unit:
+          type: string
+        quantityOrdered:
+          type: integer
+        quantityReceived:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        notes:
+          type: ["string", "null"]
+
+    PurchaseOrder:
+      type: object
+      required: [id, poNumber, supplierName, status, priority, requestedBy, items, createdAt]
+      properties:
+        id:
+          type: integer
+        poNumber:
+          type: string
+        supplierId:
+          type: ["integer", "null"]
+        supplierName:
+          type: string
+        supplierCode:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [draft, pending_approval, approved, sent, partial_received, received, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        requestedBy:
+          type: string
+        approvedBy:
+          type: ["string", "null"]
+        expectedDelivery:
+          type: ["string", "null"]
+        actualDelivery:
+          type: ["string", "null"]
+        totalAmount:
+          type: number
+        notes:
+          type: ["string", "null"]
+        terms:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/POItem"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    PurchaseOrderInput:
+      type: object
+      required: [supplierName, requestedBy, items]
+      properties:
+        supplierId:
+          type: integer
+        supplierName:
+          type: string
+        supplierCode:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        requestedBy:
+          type: string
+        expectedDelivery:
+          type: string
+        notes:
+          type: string
+        terms:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/POItemInput"
+
+    POItemInput:
+      type: object
+      required: [materialName, unit, quantityOrdered]
+      properties:
+        materialId:
+          type: integer
+        materialName:
+          type: string
+        materialCode:
+          type: string
+        unit:
+          type: string
+        quantityOrdered:
+          type: integer
+        unitPrice:
+          type: number
+        notes:
+          type: string
+
+    POReceiveInput:
+      type: object
+      required: [receivedBy, items]
+      properties:
+        receivedBy:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required: [itemId, quantityReceived]
+            properties:
+              itemId:
+                type: integer
+              quantityReceived:
+                type: integer
+
+    ReleaseInput:
+      type: object
+      required: [releasedBy]
+      properties:
+        releasedBy:
+          type: string
+        notes:
+          type: string
+
+    # ── Reports ─────────────────────────────────────────────────────────────────
+    InventoryValueReport:
+      type: object
+      required: [totalValue, totalItems, items]
+      properties:
+        totalValue:
+          type: number
+        totalItems:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            required: [materialId, materialName, currentStock, unitPrice, totalValue]
+            properties:
+              materialId:
+                type: integer
+              materialName:
+                type: string
+              materialCode:
+                type: string
+              category:
+                type: string
+              currentStock:
+                type: integer
+              unitPrice:
+                type: number
+              totalValue:
+                type: number
+
+    TopMaterialItem:
+      type: object
+      required: [materialId, materialName, totalQty, transactionCount]
+      properties:
+        materialId:
+          type: integer
+        materialName:
+          type: string
+        materialCode:
+          type: string
+        category:
+          type: string
+        totalQty:
+          type: integer
+        transactionCount:
+          type: integer
+
+    StockCardReport:
+      type: object
+      required: [materialId, materialName, transactions]
+      properties:
+        materialId:
+          type: integer
+        materialName:
+          type: string
+        materialCode:
+          type: string
+        currentStock:
+          type: integer
+        transactions:
+          type: array
+          items:
+            type: object
+            required: [id, date, type, qty, balance, reason, performedBy]
+            properties:
+              id:
+                type: integer
+              date:
+                type: string
+              type:
+                type: string
+              qty:
+                type: integer
+              balance:
+                type: integer
+              reason:
+                type: string
+              reference:
+                type: ["string", "null"]
+              performedBy:
+                type: string
+
+    # ── User ───────────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, name, email, role, department, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [technician, chief_engineer, warehouse_admin, manager, super_admin]
+        department:
+          type: string
+        phone:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [name, email, role, department]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [technician, chief_engineer, warehouse_admin, manager, super_admin]
+        department:
+          type: string
+        phone:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [technician, chief_engineer, warehouse_admin, manager, super_admin]
+        department:
+          type: string
+        phone:
+          type: string
+        isActive:
+          type: boolean

@@ -1,0 +1,451 @@
+# CORE SYSTEM
+
+## Dashboard Warehouse
+
+* Total stock material
+* Total alat aktif
+* Material low stock
+* Alat dipinjam
+* Pengajuan pending
+* Barang masuk hari ini
+* Barang keluar hari ini
+* Grafik penggunaan material
+* Grafik penggunaan alat
+* Activity realtime
+
+---
+
+# INVENTORY MATERIAL MANAGEMENT
+
+## Master Material
+
+### Data Material
+
+* Kode material otomatis
+* Nama material
+* Kategori
+* Sub kategori
+* Merk
+* Spesifikasi teknis
+* Satuan
+* Minimum stock
+* Maximum stock
+* Current stock
+* Reserved stock
+* Lokasi rak
+* Warehouse zone
+* Supplier
+* Harga satuan
+* Foto material
+* Barcode
+* QR Code
+
+## Fitur Material
+
+* Stock in
+* Stock out
+* Transfer stock
+* Stock adjustment
+* Stock opname
+* Batch number
+* Expired monitoring
+* Multi warehouse
+* Histori penggunaan
+* Histori transaksi
+
+---
+
+# INVENTORY ALAT MANAGEMENT
+
+## Master Alat
+
+### Data Alat
+
+* Kode alat
+* Nama alat
+* Kategori alat
+* Serial number
+* Brand
+* Model
+* Tahun pembelian
+* Kondisi alat
+* Status alat
+* Lokasi alat
+* PIC alat
+* Nilai aset
+* Jadwal maintenance
+* Jadwal kalibrasi
+* Foto alat
+* QR Code asset
+
+## Status Alat
+
+* Available
+* In Use
+* Maintenance
+* Calibration
+* Damaged
+* Lost
+
+---
+
+# TOOL USAGE MANAGEMENT
+
+## Penggunaan Alat
+
+* Check-out alat
+* Check-in alat
+* Approval penggunaan
+* Jadwal penggunaan
+* Multi teknisi
+* Histori penggunaan
+* Monitoring keterlambatan
+* Tracking user terakhir
+
+## Checklist Kondisi Alat
+
+### Sebelum Digunakan
+
+* Kondisi fisik
+* Kelengkapan
+* Fungsi alat
+* Safety check
+* Upload foto
+
+### Sesudah Digunakan
+
+* Kondisi akhir
+* Kerusakan
+* Catatan teknisi
+* Upload foto setelah penggunaan
+
+## Checklist Digital
+
+* Checkbox inspection
+* Digital signature
+* Timestamp otomatis
+* Nama user otomatis
+
+---
+
+# REQUEST MATERIAL SYSTEM
+
+## Pengajuan Material
+
+### Data Request
+
+* Nomor request otomatis
+* Nama pengaju
+* Departemen
+* Lokasi kerja
+* Jenis pekerjaan
+* Prioritas
+* Tanggal kebutuhan
+* Multi item request
+* Catatan teknisi
+
+## Workflow Approval
+
+* Teknisi
+* Chief Engineer
+* Warehouse
+* Manager
+
+## Status Request
+
+* Draft
+* Pending
+* Approved
+* Rejected
+* Released
+* Completed
+
+---
+
+# REQUEST ALAT SYSTEM
+
+## Pengajuan Peminjaman Alat
+
+* Request alat
+* Jadwal pemakaian
+* Approval
+* Monitoring penggunaan
+* Pengembalian alat
+* Denda keterlambatan
+* Kondisi alat kembali
+
+---
+
+# STOCK MOVEMENT SYSTEM
+
+## Barang Masuk
+
+* Purchase order
+* Supplier receiving
+* Upload invoice
+* Upload surat jalan
+* Auto stock update
+
+## Barang Keluar
+
+* Berdasarkan request
+* Auto deduction stock
+* Tracking user
+* Histori distribusi
+
+## Transfer Material
+
+* Antar gudang
+* Antar gedung
+* Antar divisi
+
+---
+
+# WAREHOUSE MANAGEMENT
+
+## Lokasi Gudang
+
+* Multi warehouse
+* Rack management
+* Zone management
+* Bin location
+
+## Warehouse Monitoring
+
+* Fast moving stock
+* Slow moving stock
+* Dead stock
+* Overstock monitoring
+
+---
+
+# REPORTING & ANALYTICS
+
+## Laporan Material
+
+* Stock report
+* Movement report
+* Usage report
+* Cost report
+* Dead stock report
+
+## Laporan Alat
+
+* Tool utilization
+* Maintenance history
+* Calibration report
+* Damage report
+
+## Analytics
+
+* Most used materials
+* Most borrowed tools
+* Monthly usage trend
+* Cost analytics
+* User activity analytics
+
+---
+
+# PDF EXPORT SYSTEM
+
+## Generate PDF
+
+* Logo perusahaan
+* Header perusahaan
+* Nomor dokumen
+* Nama pengaju
+* Approval signature
+* QR verification
+* Print-ready layout
+
+## Jenis PDF
+
+* Material request
+* Tool request
+* Inventory report
+* Stock opname
+* Tool checklist
+* Usage report
+
+---
+
+# EXCEL EXPORT SYSTEM
+
+## Export Excel
+
+* Styled table
+* Auto filter
+* Pivot-ready
+* Summary sheet
+* Formula otomatis
+* Multi sheet export
+
+---
+
+# USER MANAGEMENT
+
+## Role System
+
+### Teknisi
+
+* Request material
+* Request alat
+* Checklist alat
+* View stock
+
+### Chief Engineer
+
+* Approval request
+* Monitoring penggunaan
+* Analytics department
+
+### Warehouse Admin
+
+* Kelola inventory
+* Release barang
+* Stock adjustment
+
+### Manager
+
+* Full monitoring
+* Analytics
+* Approval final
+
+### Super Admin
+
+* Full system access
+* Multi building
+* Multi warehouse
+* User management
+
+---
+
+# SMART FEATURES
+
+## Notification System
+
+* Email notification
+* WhatsApp notification
+* In-app notification
+
+## Alert System
+
+* Low stock alert
+* Tool overdue alert
+* Maintenance due alert
+* Calibration due alert
+
+## QR & Barcode
+
+* QR inventory
+* Barcode scanner
+* Mobile scanning
+
+## Audit System
+
+* Activity log
+* User tracking
+* Timestamp log
+* Full audit trail
+
+---
+
+# UI/UX
+
+## Dashboard
+
+* Analytics cards
+* Charts
+* Kanban approval
+* Advanced tables
+* Quick search
+* Smart filters
+
+## Theme
+
+* Dark mode
+* Light mode
+
+## Responsive
+
+* Desktop
+* Tablet
+* Mobile
+
+---
+
+# TECHNOLOGY STACK
+
+## Frontend
+
+* Next.js
+* React
+* Tailwind CSS
+* Shadcn UI
+
+## Backend
+
+* Node.js
+* NestJS
+* Laravel
+
+## Database
+
+* PostgreSQL
+
+## File Storage
+
+* AWS S3
+* Cloudinary
+
+## Export Engine
+
+* ExcelJS
+* jsPDF
+* pdfmake
+
+---
+
+# ENTERPRISE FEATURES
+
+## Multi Building
+
+* Multi gedung
+* Multi warehouse
+* Multi department
+
+## Asset Tracking
+
+* GPS tracking alat
+* RFID support
+* IoT integration
+
+## Maintenance Module
+
+* Preventive maintenance
+* Maintenance schedule
+* Work order integration
+
+## Procurement Module
+
+* Purchase request
+* Vendor management
+* Purchase order
+
+---
+
+# MODUL APLIKASI
+
+* Dashboard
+* Inventory Material
+* Inventory Tools
+* Material Request
+* Tool Request
+* Stock Movement
+* Warehouse Management
+* Tool Checklist
+* Maintenance
+* Reporting
+* Analytics
+* User Management
+* Settings
