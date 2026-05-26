@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install -g pnpm@10 && pnpm install --no-frozen-lockfile --ignore-scripts",
+  "installCommand": "npm install -g pnpm@9 && pnpm install --no-frozen-lockfile --ignore-scripts",
   "buildCommand": "pnpm --filter @workspace/api-client-react run --if-present build && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/warehouse-app build",
   "outputDirectory": "artifacts/warehouse-app/dist/public",
   "framework": null,
