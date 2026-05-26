@@ -3,7 +3,6 @@ RUN npm install -g pnpm@10
 WORKDIR /app
 COPY . .
 RUN pnpm install --no-frozen-lockfile --ignore-scripts
-RUN pnpm --filter @workspace/db build
 RUN pnpm --filter @workspace/api-zod build
 RUN pnpm --filter @workspace/api-client-react build
 RUN pnpm --filter @workspace/api-server build
