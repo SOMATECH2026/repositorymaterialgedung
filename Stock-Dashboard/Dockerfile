@@ -1,6 +1,7 @@
 FROM node:20-slim
 RUN npm install -g pnpm@10
 WORKDIR /app
+ARG CACHEBUST=1
 COPY . .
 RUN pnpm install --no-frozen-lockfile --ignore-scripts
 RUN pnpm --filter @workspace/api-zod run --if-present build
